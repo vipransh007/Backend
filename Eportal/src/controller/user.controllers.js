@@ -7,12 +7,10 @@ const registerUser = asyncHandler(async (req, res) => {
 
     console.log("email:", email);
 
-    // Check if all required fields are present and non-empty
     if ([fullName, email, username, password].some(field => !field?.trim())) {
         return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({
         $or: [{ username: username.toLowerCase() }, { email }]
     });
@@ -20,10 +18,10 @@ const registerUser = asyncHandler(async (req, res) => {
         return res.status(409).json({ message: "User already exists" });
     }
 
-    // Handle avatar and cover image files
     const avatarLocalPath = req.files?.avatar?.[0]?.path;
     const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
-
+    console.log(avatarLocalPath);
+    
     if (!avatarLocalPath) {
         return res.status(400).json({ message: "Avatar is required" });
     }
@@ -37,7 +35,6 @@ const registerUser = asyncHandler(async (req, res) => {
         return res.status(400).json({ message: "Avatar upload failed" });
     }
 
-    // Create user
     const user = await User.create({
         fullName,
         avatar: avatar.url,
