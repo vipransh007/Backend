@@ -74,37 +74,49 @@ const registerUser = asyncHandler(async (req, res) => {
     });
 });
 
-const loginUser = asyncHandler(async(req, res) => {
-    // todo
-    // req body
-    // check whether i want them to enter wiht username or email
-    // check if the id exist 
-    // if yes then check for the password
-    // generate the acess token 
-    // send these token in the form of cookies 
-    const {email , username, password} = req.body
+const loginUser = asyncHandler(async (req, res) => {
+    const { email, username, password } = req.body;
 
-    if(!username || !email){
-        res.status(400).json({message : "Fields are required"})
+    if (!username || !email) {
+        return res.status(400).json({ message: "Fields are required" });
     }
 
     const user = await User.findOne({
-        $or : [{username} , {email}]
-    })
+        $or: [{ username }, { email }]
+    });
 
-    if(!user){
-        res.status(404).json({message : "User Does Not exist"})
-  
-       const isPasswordValid =  await user.isPasswordCorrect(password)
-
-       if(!isPasswordValid){
-         res.status(401).json({message : "Email or Username does not exist"})
-
-       }
-
-        const {refreshToken , accessToken} =  await generateAccessAndRefreshToken(user._id);
-        
+    if (!user) {
+        return res.status(404).json({ message: "User Does Not exist" });
     }
+
+    const isPasswordValid = await user.isPasswordCorrect(password);
+
+    if (!isPasswordValid) {
+        return res.status(401).json({ message: "Email or Username does not exist" });
+    }
+
+    const { refreshToken, accessToken } = await generateAccessAndRefreshToken(user._id);
+
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
+
+    const options = { 
+        httpOnly: true,
+        secure: true,
+        sameSite: "Strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000
+    };
+
+    return res.status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json({
+            success: true,
+            user: loggedInUser
+        });
+});
+
+const logoutUser = asyncHandler(async (req, res) => {
+    User.findById(user._id)
 })
 
 
