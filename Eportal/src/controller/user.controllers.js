@@ -2,6 +2,24 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/users.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
+const generateAccessAndRefreshToken = async(userId) =>
+{
+    try {
+        const user = await User.findById(userId)
+        const refreshToken = user.generateRefreshToken()
+        const accessToken = user.generateAccessToken ()
+    user.refreshToken = refreshToken
+    await user.save({validateBeforeSave: false})
+
+    return {refreshToken, accessToken};
+
+        
+    } catch (error) {
+        res.status(500).json({message : "Something Went Wrong while generating refresh and access token"})
+
+    }
+}
+
 const registerUser = asyncHandler(async (req, res) => {
     const { fullName, email, username, password } = req.body;
 
@@ -56,4 +74,38 @@ const registerUser = asyncHandler(async (req, res) => {
     });
 });
 
-export { registerUser };
+const loginUser = asyncHandler(async(req, res) => {
+    // todo
+    // req body
+    // check whether i want them to enter wiht username or email
+    // check if the id exist 
+    // if yes then check for the password
+    // generate the acess token 
+    // send these token in the form of cookies 
+    const {email , username, password} = req.body
+
+    if(!username || !email){
+        res.status(400).json({message : "Fields are required"})
+    }
+
+    const user = await User.findOne({
+        $or : [{username} , {email}]
+    })
+
+    if(!user){
+        res.status(404).json({message : "User Does Not exist"})
+  
+       const isPasswordValid =  await user.isPasswordCorrect(password)
+
+       if(!isPasswordValid){
+         res.status(401).json({message : "Email or Username does not exist"})
+
+       }
+
+        const {refreshToken , accessToken} =  await generateAccessAndRefreshToken(user._id);
+        
+    }
+})
+
+
+export { registerUser, loginUser };
