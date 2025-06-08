@@ -116,7 +116,8 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-    User.findById(user._id)
+    User.findById(user._id);
+    
 })
 
 
