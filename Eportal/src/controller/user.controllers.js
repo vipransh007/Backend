@@ -77,7 +77,7 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
     const { email, username, password } = req.body;
 
-    if (!username || !email) {
+    if (!(username || email)) {
         return res.status(400).json({ message: "Fields are required" });
     }
 
@@ -116,20 +116,22 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-    await User.findByIdAndUpdate(req.user._id , {
-        $set:{
+    await User.findByIdAndUpdate(req.user._id, {
+        $set: {
             refreshTokens: undefined
         }
-    })
+    });
+
     const options = {
-        httpOnly : true,
+        httpOnly: true,
         secure: true
-    }
+    };
 
-})
+    res
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .status(200)
+        .json({ message: "User Logged Out" });
+});
 
-return res.status(200).clearCookie("accessToken", options)
-.clearCookie("refreshToken", options)
-.json(200, "User LoggedOut");
-
-export { registerUser, loginUser, logoutUser };
+export {loginUser,logoutUser,registerUser};
