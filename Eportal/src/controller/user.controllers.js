@@ -175,4 +175,59 @@ const refreshAccessToken = asyncHandler(async(req, res)=> {
  }
 })
 
+const changeCurrentPassword = asyncHandler(async(req, res) => {
+    const {oldPassword, newPassword} = req.body;
+
+    const user = await User.findById(req.user?._id)
+
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+
+    if(!isPasswordCorrect){
+        res.status(400).json({message : "Old Passowrd Does not Match"})
+    }
+
+    user.password = newPassword
+    await user.save({validateBeforeSave: false})
+
+    return res.status(200).
+    json({message: "Password Changed Successfully "});
+
+
+})
+
+const getCurrentUser = asyncHandler(async(req , res) => {
+    return res.status(200).json({
+        user : req.user,
+        message: "current user Fetched Successfully "
+    })
+
+
+    const updateAccountDetails = asyncHandler(async(req, res) =>  {
+        const {fullName , email} = req.body
+
+
+        if(!fullName || !email){
+            res.status(400).json({mesasge: "All fileds are required"})
+        }
+
+        const User = await User.findByIdAndUpdate(req.user?._id,
+            {
+                $set: {
+                    fullName,
+                    email : email
+                }
+            },
+            {new : true}
+        )
+    }).select("-password")
+
+    return res.status(200).
+    json({user : user,
+        message : "Account Details Updated Successfully "}
+    )
+})
+
+
+
+
 export {loginUser,logoutUser,registerUser, refreshAccessToken};
