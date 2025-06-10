@@ -285,7 +285,6 @@ const updateUserCoverImage = asyncHandler(async(req, res) =>{
     })
 })
 
-const 
 export {
     loginUser,
     logoutUser,
