@@ -227,7 +227,73 @@ const getCurrentUser = asyncHandler(async(req , res) => {
     )
 })
 
+const updateUserAvatar = asyncHandler(async(req, res) =>{
+    const avatarLocalPath = req.files?.path
+    
+    if(!avatarLocalPath){
+        res.stauts(400).json({message: "Avatar File Is Missing"})
+    }
+    const avatar = await uploadOnCloudinary(avatarLocalPath)
 
+    if(!avatar.url){
+        res.stauts(400).json({message: "Error While Updating On Avatar"})
+    }
 
+    await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set:{
+                avatar : avatar.url
+            }
+        },
+        {new:true}
+    ).select("-password")
 
-export {loginUser,logoutUser,registerUser, refreshAccessToken};
+    return res.status(200).
+    json({
+        user : user,
+        message: "Avatar Image Uploaded Successfully"
+    })
+
+})
+const updateUserCoverImage = asyncHandler(async(req, res) =>{
+    const CoverImageLocalPath = req.files?.path
+    
+    if(!avatarLocalPath){
+        res.stauts(400).json({message: "Cover Image File Is Missing"})
+    }
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+
+    if(!coverImage.url){
+        res.stauts(400).json({message: "Error While Updating On Avatar"})
+    }
+
+   const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set:{
+                coverImage : coverImage.url
+            }
+        },
+        {new:true}
+    ).select("-password")
+
+    return res.status(200).
+    json({
+        user : user,
+        message: "User Image Uploaded Successfully"
+    })
+})
+
+const 
+export {
+    loginUser,
+    logoutUser,
+    registerUser, 
+    refreshAccessToken,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateUserAvatar,
+    updateAccountDetails,
+    updateUserAvatar
+};
