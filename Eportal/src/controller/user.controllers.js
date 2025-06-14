@@ -283,81 +283,78 @@ const updateUserCoverImage = asyncHandler(async(req, res) =>{
         message: "User Image Uploaded Successfully"
     })
 })
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+    const { username } = req.params;
 
-const getUserChannelProfile = asyncHandler(async(req, res) =>  {
-    const {username } = req.params;
-
-    if(!username?.trim()){
-        res.status(400).json({message : "User Name Is Missing"})
+    if (!username?.trim()) {
+        return res.status(400).json({ message: "User Name is missing" });
     }
 
     const channel = await User.aggregate([
         {
-            $match:{
-                username : username?.toLowerCase()
-            },
-            $lookup: {
-                from : "subscriptions",
-                localField: "_id",
-                foreignField: "channel",
-                as:"subscribers"
-            },
-            $lookup: {
-                from : "subscriptions",
-                localField: "_id",
-                foreignField: "subscriber",
-                as:"subscriberedTo"
-            },   
+            $match: {
+                username: username.toLowerCase()
+            }
         },
         {
-            $addFields :{
-                subscribersCount : {
-                    $size:"$subscribers"
-                },
-                subscribeToCount:{
-                    $size:"$subscribedTo"
-                },
-                isSubscriped : {
-                    if:{$in: [req.user?._id, "$subscribers.subscriber"]},
-                    then:true,
-                    else:false
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "channel",
+                as: "subscribers"
+            }
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscribedTo"
+            }
+        },
+        {
+            $addFields: {
+                subscribersCount: { $size: "$subscribers" },
+                subscribeToCount: { $size: "$subscribedTo" },
+                isSubscribed: {
+                    $cond: {
+                        if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+                        then: true,
+                        else: false
+                    }
                 }
             }
         },
         {
-            $project :{
-                fullname: 1,
-                username:1,
+            $project: {
+                fullName: 1,
+                username: 1,
                 subscribersCount: 1,
-                subscribeToCount:1,
-                isSubscriped:1,
-                avatar:1,
-                coverImage:1,
+                subscribeToCount: 1,
+                isSubscribed: 1,
+                avatar: 1,
+                coverImage: 1,
                 email: 1
             }
         }
-    ])
+    ]);
 
-if (!channel?.length) {
-    return res.status(404).json({ message: "Channel does not exist" });
-}
+    if (!channel?.length) {
+        return res.status(404).json({ message: "Channel does not exist" });
+    }
 
-return res.status(200).json({
-    ...channel[0],
-    message: "User does not exist"
+    return res.status(200).json(channel[0]);
 });
 
-
-
+// Export section (ensure this is in a separate file or after all handlers are declared)
 export {
     loginUser,
     logoutUser,
-    registerUser, 
+    registerUser,
     refreshAccessToken,
     changeCurrentPassword,
     getCurrentUser,
     updateUserAvatar,
     updateAccountDetails,
-    updateUserAvatar,
     getUserChannelProfile
 };
