@@ -194,38 +194,36 @@ const changeCurrentPassword = asyncHandler(async(req, res) => {
 
 
 })
-
-const getCurrentUser = asyncHandler(async(req , res) => {
+const getCurrentUser = asyncHandler(async (req, res) => {
     return res.status(200).json({
-        user : req.user,
-        message: "current user Fetched Successfully "
-    })
+        user: req.user,
+        message: "Current user fetched successfully"
+    });
+});
 
+const updateAccountDetails = asyncHandler(async (req, res) => {
+    const { fullName, email } = req.body;
 
-    const updateAccountDetails = asyncHandler(async(req, res) =>  {
-        const {fullName , email} = req.body
+    if (!fullName || !email) {
+        return res.status(400).json({ message: "All fields are required" });
+    }
 
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                fullName,
+                email
+            }
+        },
+        { new: true }
+    ).select("-password");
 
-        if(!fullName || !email){
-            res.status(400).json({mesasge: "All fileds are required"})
-        }
-
-        const User = await User.findByIdAndUpdate(req.user?._id,
-            {
-                $set: {
-                    fullName,
-                    email : email
-                }
-            },
-            {new : true}
-        )
-    }).select("-password")
-
-    return res.status(200).
-    json({user : user,
-        message : "Account Details Updated Successfully "}
-    )
-})
+    return res.status(200).json({
+        user,
+        message: "Account details updated successfully"
+    });
+});
 
 const updateUserAvatar = asyncHandler(async(req, res) =>{
     const avatarLocalPath = req.files?.path
@@ -285,6 +283,15 @@ const updateUserCoverImage = asyncHandler(async(req, res) =>{
     })
 })
 
+const getUserChannelProfile = asyncHandler(async(req, res) =>  {
+    const {username } = req.params;
+
+    if(!username?.trim()){
+        res.status(400).json({message : "User Name Is Missing"})
+    }
+
+    User.find({username})
+})
 export {
     loginUser,
     logoutUser,
@@ -294,5 +301,6 @@ export {
     getCurrentUser,
     updateUserAvatar,
     updateAccountDetails,
-    updateUserAvatar
+    updateUserAvatar,
+    getUserChannelProfile
 };
