@@ -3,6 +3,8 @@ import { User } from "../models/users.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 import { subscribe } from "diagnostics_channel";
+import mongoose from "mongoose";
+import { pipeline } from "stream";
 
 const generateAccessAndRefreshToken = async(userId) =>
 {
@@ -346,7 +348,59 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     return res.status(200).json(channel[0]);
 });
 
-// Export section (ensure this is in a separate file or after all handlers are declared)
+const getWatchHistory = asyncHandler(async(req,res) => {
+    const user = await User.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(req.user._id)
+            }
+        },
+        {
+            $lookup: {
+                from : "videos",
+                localField: "watchHistory",
+                foreignField: "_id",
+                as: "watchHistory",
+
+                pipeline :[
+                    {
+                        $lookup: {
+                            from : "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner",
+
+                            pipeline : [
+                                {
+                                    $project: {
+                                        fullName :1,
+                                        username:1,
+                                        avatar:1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields:{
+                            owner: {
+                                $first: "$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+
+
+return res.status(200).json({
+  message: "Watch history fetched Successfully",
+  watchHistory: user[0]?.watchHistory || []
+  });
+})
+
+
 export {
     loginUser,
     logoutUser,
@@ -356,5 +410,6 @@ export {
     getCurrentUser,
     updateUserAvatar,
     updateAccountDetails,
-    getUserChannelProfile
+    getUserChannelProfile,
+    getWatchHistory
 };
