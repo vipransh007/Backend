@@ -47,6 +47,16 @@ export class AuthService {
             console.error("Error getting current user:", error);
             throw error;
         }
+        return null;
+    }
+    async logout() {
+        try {
+            await this.account.deleteSessions();
+            
+        } catch (error) {
+            console.error("Error logging out:", error);
+            throw error;
+        }
     }
 }
 const authService = new AuthService();  
