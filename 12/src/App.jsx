@@ -1,40 +1,39 @@
-import React, { use } from 'react';
-import './App.css';
-import { useState , useEffect} from 'react';
-import { useDispatch } from 'react-redux';
-import authService from './appwrite/auth';
-import {login , logout} from './store/authSlice';
-
-
+import React, { useState, useEffect } from 'react'
+import { useDispatch } from 'react-redux'
+import './App.css'
+import authService from "./appwrite/auth"
+import {login, logout} from "./store/authSlice"
+import Header from './components/header/Header.jsx'
+import Footer from './components/footer/Footer.jsx'
+import { Outlet } from 'react-router-dom'
 
 function App() {
-  // This is the main component of the app
-  // It renders a simple heading for the blog app
-
-  const [loading, setLoading] = useState(true);
-  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(true)
+  const dispatch = useDispatch()
 
   useEffect(() => {
-    authService.getCurrentUser().then((userData) => {
-      if(userData){
-        dispatch(login({userData}));
+    authService.getCurrentUser()
+    .then((userData) => {
+      if (userData) {
+        dispatch(login({userData}))
+      } else {
+        dispatch(logout())
       }
-      else{
-        dispatch(logout());
-      }
-    }).finally(() => setLoading(false))
-   },[])
-
-   return !loading ? (
-    <div className='CondtionalRendering'></div>
-   ) : null;
-
-
-  return (
-    <>
-      <h1>A blog app using appwrite</h1>
-    </>
-  )
+    })
+    .finally(() => setLoading(false))
+  }, [])
+  
+  return !loading ? (
+    <div className='min-h-screen flex flex-wrap content-between bg-gray-400'>
+      <div className='w-full block'>
+        <Header />
+        <main>
+        TODO:  <Outlet />
+        </main>
+        <Footer />
+      </div>
+    </div>
+  ) : null
 }
 
 export default App
